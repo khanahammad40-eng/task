@@ -7,7 +7,13 @@ I used Claude Code and Cursor Agent together for this project. Claude was used f
 For each step below i wrote what i was trying to do in one sentence, the exact prompt i typed in a code block, what the agent gave back with a short snippet and description, and what i had to fix.
 
 
- Prompts and Outputs
+
+
+
+## PROMPTS AND OUTPUTS 
+
+
+
 
  Step 1 – Hexagonal folder structure
 
@@ -23,6 +29,10 @@ I didnt have to fix much here, the structure was good from the start.
 
 
 
+
+
+
+
  Step 2 – Domain entities
 
 I was trying to get all the domain types for the app: Route, ComplianceBalance, BankEntry, Pool.
@@ -32,6 +42,9 @@ I was trying to get all the domain types for the app: Route, ComplianceBalance, 
 Write the domain entities for Fuel EU Maritime: Route (with routeId, vesselType, fuelType, year, ghgIntensity, fuelConsumption, distance, totalEmissions, isBaseline), ComplianceBalance (shipId, year, cb), BankEntry, and Pool with PoolMemberAllocation. Use TypeScript interfaces only, no implementation.
 
 The agent gave back four interfaces. Route had all the fields in camelCase. ComplianceBalance had shipId, year, cb. BankEntry had id, shipId, year, amountGco2eq, createdAt. Pool had CreatePoolCommand and CreatePoolResult with members array of shipId, cbBefore, cbAfter. I had to ask a follow up because in one of the types it used "any" for an array and i wanted proper typing. I said "replace any with the proper type for the members array" and it fixed it.
+
+
+
 
 
 
@@ -47,6 +60,9 @@ The output was clean. Each interface had the right method signatures and return 
 
 
 
+
+
+
  Step 4 – Compute CB formula
 
 I was trying to get the compliance balance formula in TypeScript based on the Fuel EU regulation.
@@ -55,6 +71,10 @@ Implement the Fuel EU compliance balance formula in TypeScript. CB = (Target - A
 
 
 The agent gave back a function computeCbFromRoute with the formula (targetIntensity - actualIntensity) * (fuelConsumptionTonnes * 41000). It also had constants for TARGET_INTENSITY_2025 and MJ_PER_TONNE_FUEL. I cross checked the math manually for the R001 route from the spec (91.0 intensity, 5000 tonnes) and the sign and size of the result made sense so i kept it.
+
+
+
+
 
 
 
@@ -69,6 +89,11 @@ Write the Prisma schema for Fuel EU Maritime: Route table (id, route_id unique, 
 The agent gave back the full schema with all columns. Cursor forgot to add the UNIQUE constraint on ship_id + year for the ShipCompliance table. I had to add @@unique([ship_id, year]) myself because the compliance balance is per ship per year and we need to upsert by that pair.
 
 
+
+
+
+
+
  Step 6 – Seed script with 5 routes
 
 I was trying to get the seed file that inserts the 5 routes from the spec table.
@@ -77,6 +102,12 @@ Write a Prisma seed script that inserts the 5 routes from the Fuel EU spec: R001
 
 
 The output was correct. It had the routes array with all the numbers and the loop with upsert where route_id was the unique key. R001 had is_baseline true and the rest false. Everything was correct here so i didnt change anything.
+
+
+
+
+
+
 
 
 
@@ -92,6 +123,13 @@ The agent gave back the server file with app.get and app.post for each path. The
 
 
 
+
+
+
+
+
+
+
  Step 8 – Greedy pool allocation (Article 21)
 
 I was trying to implement the pooling logic where surplus ships transfer to deficit ships and we have to respect the rules that deficit ship cannot exit worse and surplus ship cannot exit negative.
@@ -101,6 +139,13 @@ Implement the Fuel EU Article 21 pooling algorithm. We have a list of ships with
 
 
 This was the hardest part. The first output had a bug where in some cases a deficit ship was exiting with cb_after worse than cb_before. The logic was iterating in the wrong order or not updating the surplus remaining correctly. I had to fix it with a follow up prompt: "There is a bug: when we allocate from surplus to deficit we must decrement the surplus remaining and the deficit ship must get cb_after = cb_before + amount received. Make sure we never assign more than the deficit needs and never leave a surplus ship with negative cb_after." The agent rewrote the inner loop and then i tested with two ships one surplus one deficit and it worked.
+
+
+
+
+
+
+
 
 
 
@@ -116,6 +161,12 @@ The agent gave back the hook signatures and the useState and useEffect for fetch
 
 
 
+
+
+
+
+
+
  Step 10 – RouteTable component with filters
 
 I was trying to get the table that shows all routes with filters for vesselType, fuelType, year and the Set Baseline button.
@@ -125,6 +176,11 @@ Create the RoutesTab component: a table with columns routeId, vesselType, fuelTy
 
 
 The agent gave back the table and the filters. The Tailwind class names for the ocean color palette were wrong. It used things like bg-ocean-500 or text-maritime-700 which are not real Tailwind classes. I had to fix them to real classes like bg-slate-800, text-emerald-400, border-slate-700 so the UI would actually compile and look good.
+
+
+
+
+
 
 
 
@@ -139,6 +195,10 @@ The agent gave back the tab with the table and a BarChart from recharts. The cha
 
 
 
+
+
+
+
  Step 12 – Banking tab UI with KPIs
 
 I was trying to get the Banking tab with ship/year inputs and the KPIs cb_before, applied, cb_after and the Bank and Apply buttons.
@@ -150,8 +210,7 @@ Create the Banking tab: inputs for shipId and year. On load call GET /compliance
 The agent gave back the form with the two inputs, the display of CB, the Bank button disabled when cb <= 0, and the Apply section with amount input and the result box showing cb_before, applied, cb_after. This worked well and i only had to align the spacing with the rest of the app.
 
 
-
- Validation and Corrections
+## VALIDATIONS AND CORRECTIONS 
 
 I ran tsc --noEmit after every agent session to catch type errors. Sometimes the agent would return something that looked right but had a missing import or a wrong generic and the build would fail. Doing that after each step meant i could tell the agent "there is a type error in the ComplianceRepository, the getCb return type should be Promise<ComplianceBalance | null>" and fix it before moving on.
 
@@ -163,7 +222,7 @@ I also checked that no express or prisma imports exist in the core/ folder using
 
 
 
-Observations
+## OBSERVATIONS
 
 Where it really saved time was boilerplate. The tsconfig files, the Prisma schema structure, the Express app setup with cors and json, and the repetitive adapter files (like the Prisma route repository that maps db rows to domain objects) would have taken me a long time to type by hand. The agent generated those in one go and i could just adjust the names or add a field. Same for the React components: the table structure and the filter dropdowns are a lot of JSX and having a first version to edit was much faster than starting from zero.
 
@@ -173,6 +232,6 @@ Combining Claude for thinking and Cursor for typing and Copilot for repetition w
 
 
 
- Best Practices
+## BEST PRACTICES 
 
 Always paste the full spec or the relevant part of the assignment into the first prompt so the agent knows the constraints. Commit after every agent session so you can revert if the next step breaks something. Never trust the agent for regulatory numbers or constants. Look them up or compute them yourself and then tell the agent what to use. Run tsc after every generation so type errors dont pile up. Test the math by hand before writing tests so you know what the expected value is. When something is wrong give a short follow up prompt with the exact fix you need instead of saying "it doesnt work." Use grep or search to make sure the architecture rules are kept (no framework in core). Keep the prompts focused on one thing per step so the output is easier to check.
