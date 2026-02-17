@@ -118,7 +118,7 @@ npm run test
 
  Screenshots / Sample Requests & Responses
 
-
+![Routes tab – route data from API](images/image1.png)
 
 The dashboard successfully fetches route data from the backend via the GET  http://localhost:3001/routes  and displays it in the Routes table.
 The baseline status is retrieved from the database and reflected correctly, confirming API–database integration and state persistence AND  
@@ -126,19 +126,20 @@ The baseline status is retrieved from the database and reflected correctly, conf
 R001 was baseline and remaining has buttons Set Baseline button to set particular route as base-line
 
 
+![Set Baseline – R002 as baseline](images/image2.png)
 
- When I click baseline on Route 2, it becomes highlighted and shows “Baseline” — is that correct  R002 was baseline and remaining has buttons Set Baseline button to set particular route as base-line
+When I click baseline on Route 2, it becomes highlighted and shows “Baseline” — is that correct  R002 was baseline and remaining has buttons Set Baseline button to set particular route as base-line
 The Set Baseline action triggers the POST /routes/:routeId/baseline API, updating the selected 
 route’s baseline flag in the backend.
 The UI refresh confirms the API response is applied correctly, demonstrating full frontend–backend communication and update flow.
 
+![Vessel type and year filters](images/image3.png)
 
+Vessel type and year filters working.
 
+![Routes filters](images/image4.png)
 
-vessel type and year filters working 
-
-
-
+![Compare tab – baseline vs comparison](images/image5.png)
 
 The Compare tab correctly uses the /routes/comparison API to fetch baseline and comparison route data.
 Baseline GHG intensity is taken from the route marked as baseline in the backend database.
@@ -155,19 +156,21 @@ R004: Comparison = 89.2, PercentDiff = ((89.2 / 88) − 1) × 100 = 1.36%, Compl
 R005: Comparison = 90.5, PercentDiff = ((90.5 / 88) − 1) × 100 = 2.84%, Not compliant because 90.5 > 89.3368.
 Compliance rule: If comparison GHG intensity ≤ 89.3368 → Compliant, otherwise → Not compliant.
 
-
-
+![Banking – Bank and Apply disabled when CB ≤ 0](images/image6.png)
 
 Bank surplus and apply backend both disabled because bank did not contain any balance so bank surplus disabled and CB score is less than 0 so Apply Backend disabled
+![Banking – Bank surplus enabled when CB > 0](images/image7.png)
 
+When cb score is greater than 0 bank surplus is enabled.
 
-When cb score is greater than 0 bank surplus is enabled 
-
-
+![Pooling – no ships selected, Create Pool disabled](images/image8.png)
 
 Before selecting ships:
 The Create Pool button is disabled because no ships are selected and the Pool sum = 0.00, so pooling cannot be performed.
 Pooling requires selecting ships whose combined adjusted CB is ≥ 0 to ensure compliance rules are met.
+
+![Pooling – ships selected, Create Pool enabled](images/image9.png)
+
 After selecting R001, R002, and R003:
 The Create Pool button becomes enabled because ships are selected and the Pool sum = 6,154,821,600 gCO₂eq (positive).
 This is valid since the surplus from R002 (+7,366,302,720) offsets deficits of R001 (−340,956,000) and R003 (−870,525,120), making total ≥ 0
