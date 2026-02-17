@@ -135,9 +135,10 @@ The UI refresh confirms the API response is applied correctly, demonstrating ful
 
 ![Vessel type and year filters](images/image3.png)
 
-Vessel type and year filters working.
+Vessel type ,Fuel type and year filters working.
 
 ![Routes filters](images/image4.png)
+Vessel type ,Fuel type and year filters working.
 
 ![Compare tab – baseline vs comparison](images/image5.png)
 
